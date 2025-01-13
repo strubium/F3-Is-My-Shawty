@@ -29,11 +29,12 @@ public class F3IsMyShawty {
     @EventBusSubscriber(Side.CLIENT)
     public static class EventHandlers {
 
-        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        @SubscribeEvent(priority = EventPriority.LOWEST)
         public static void onRenderDebug(RenderGameOverlayEvent.Text event) {
             Minecraft mc = Minecraft.getMinecraft();
 
             if (mc.gameSettings.showDebugInfo) {
+                mc.profiler.startSection("debugScreen");
                 List<String> leftText = event.getLeft();
                 List<String> rightText = event.getRight();
 
@@ -50,6 +51,7 @@ public class F3IsMyShawty {
                     // Manually render the text without background
                     renderTextWithoutBackground(leftText, rightText);
                 }
+                mc.profiler.endSection();
             }
         }
 
@@ -73,6 +75,8 @@ public class F3IsMyShawty {
 
         private static void renderTextWithoutBackground(List<String> leftText, List<String> rightText) {
             Minecraft mc = Minecraft.getMinecraft();
+            mc.profiler.startSection("shawtyDebugScreen");
+
             ScaledResolution scaledResolution = new ScaledResolution(mc);
             int screenWidth = scaledResolution.getScaledWidth(); // Correct scaled width
             int leftMargin = 2;
@@ -101,6 +105,7 @@ public class F3IsMyShawty {
                 int yPosition = 2 + i * 10; // Adjust line spacing as needed
                 mc.fontRenderer.drawString(text, xPosition, yPosition, 0xFFFFFF);
             }
+            mc.profiler.endSection();
         }
     }
 }
