@@ -1,11 +1,8 @@
 package com.strubium.f3mod.config;
 
 import com.strubium.f3mod.F3IsMyShawty;
-import net.minecraftforge.common.config.Config;
 import net.minecraft.util.text.TextFormatting;
-
-import java.util.HashMap;
-import java.util.Map;
+import net.minecraftforge.common.config.Config;
 
 @Config(modid = "f3ismyshawty")
 public class ModConfig {
@@ -21,6 +18,7 @@ public class ModConfig {
             "Format each entry as 'key:color'.",
             "Supported colors: BLACK, DARK_BLUE, DARK_GREEN, DARK_AQUA, DARK_RED, DARK_PURPLE, GOLD, GRAY, DARK_GRAY, BLUE, GREEN, AQUA, RED, LIGHT_PURPLE, YELLOW, WHITE."
     })
+    @Config.RequiresMcRestart
     public static String[] textColorMappings = new String[]{
             "fps:GREEN",
             "mem:AQUA"
