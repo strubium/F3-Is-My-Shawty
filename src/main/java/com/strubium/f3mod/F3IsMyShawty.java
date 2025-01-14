@@ -20,9 +20,6 @@ import java.util.stream.Collectors;
 @Mod(modid = "f3ismyshawty", name = "F3 Is My Shawty", version = "1.0.1", clientSideOnly = true)
 public class F3IsMyShawty {
 
-    @Mod.Instance
-    public static F3IsMyShawty instance;
-
     public static final Map<String, TextFormatting> lineColors = new HashMap<>();
 
 
