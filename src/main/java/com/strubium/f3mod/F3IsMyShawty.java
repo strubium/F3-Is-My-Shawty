@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.relauncher.Side;
@@ -22,6 +23,10 @@ public class F3IsMyShawty {
 
     public static final Map<String, TextFormatting> lineColors = new HashMap<>();
 
+    @Mod.EventHandler
+    public void onPreInit(FMLPreInitializationEvent event) {
+        ModConfig.reloadColors();
+    }
 
     @EventBusSubscriber(Side.CLIENT)
     public static class EventHandlers {

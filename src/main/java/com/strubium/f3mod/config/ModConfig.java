@@ -24,11 +24,6 @@ public class ModConfig {
             "mem:AQUA"
     };
 
-    static {
-        // Parse the textColorMappings into the lineColors map
-        reloadColors();
-    }
-
     public static void reloadColors() {
        F3IsMyShawty.lineColors.clear();
         for (String mapping : textColorMappings) {
