@@ -24,8 +24,11 @@ public class ModConfig {
             "mem:AQUA"
     };
 
+    @Config.Comment("Should we use a cache for the F3 menu? If true, only recompute F3 data when something changes")
+    public static boolean cacheEnabled = true;
+
     public static void reloadColors() {
-       F3IsMyShawty.lineColors.clear();
+        F3IsMyShawty.lineColors.clear();
         for (String mapping : textColorMappings) {
             String[] parts = mapping.split(":", 2);
             if (parts.length == 2) {

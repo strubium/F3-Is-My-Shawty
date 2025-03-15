@@ -12,20 +12,24 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraft.util.text.TextFormatting;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.Objects;
 
-@Mod(modid = "f3ismyshawty", name = "F3 Is My Shawty", version = "1.0.1", clientSideOnly = true)
+@Mod(modid = "f3ismyshawty", name = "F3 Is My Shawty", version = "1.0.4", clientSideOnly = true)
 public class F3IsMyShawty {
 
+    public static Minecraft mc;
+
     public static final Map<String, TextFormatting> lineColors = new HashMap<>();
+    private static List<String> cachedLeftText;
+    private static List<String> cachedRightText;
+    private static int lastHash = 0;
+
 
     @Mod.EventHandler
     public void onPreInit(FMLPreInitializationEvent event) {
         ModConfig.reloadColors();
+        mc = Minecraft.getMinecraft();
     }
 
     @EventBusSubscriber(Side.CLIENT)
@@ -33,79 +37,84 @@ public class F3IsMyShawty {
 
         @SubscribeEvent(priority = EventPriority.LOWEST)
         public static void onRenderDebug(RenderGameOverlayEvent.Text event) {
-            Minecraft mc = Minecraft.getMinecraft();
 
             if (mc.gameSettings.showDebugInfo) {
                 mc.profiler.startSection("debugScreen");
-                List<String> leftText = event.getLeft();
-                List<String> rightText = event.getRight();
 
-                // Filter out disabled sections and apply formatting
+                List<String> leftText = new ArrayList<>(event.getLeft());
+                List<String> rightText = new ArrayList<>(event.getRight());
+
+                // Remove any disabled sections from the debug text
                 leftText.removeIf(EventHandlers::isDisabled);
                 rightText.removeIf(EventHandlers::isDisabled);
 
+                // Apply formatting
                 leftText.replaceAll(EventHandlers::applyFormatting);
                 rightText.replaceAll(EventHandlers::applyFormatting);
 
-                // Remove debug background if the config is enabled
+                if (ModConfig.cacheEnabled) {
+                    mc.profiler.startSection("cacheComparison");
+
+                    // Compute new hash for the text lists (only visible sections)
+                    int newHash = Objects.hash(leftText, rightText);
+
+                    // Check if the hash has changed and update cache accordingly
+                    if (newHash != lastHash) {
+                        mc.profiler.startSection("cacheMiss");
+                        // Cache miss: update the cache and log
+                        cachedLeftText = new ArrayList<>(leftText);
+                        cachedRightText = new ArrayList<>(rightText);
+                        lastHash = newHash;
+
+                        mc.profiler.endSection(); // End cacheMiss section
+                    }
+
+                    mc.profiler.endSection(); // End cacheComparison section
+                } else {
+                    // If cache is disabled, just set the left and right text to the current state
+                    cachedLeftText = new ArrayList<>(leftText);
+                    cachedRightText = new ArrayList<>(rightText);
+                }
+
                 if (ModConfig.removeDebugBackground) {
-                    event.setCanceled(true); // Cancel the default background rendering
-                    // Manually render the text without background
-                    renderTextWithoutBackground(leftText, rightText);
+                    event.setCanceled(true);
+                    renderTextWithoutBackground(cachedLeftText, cachedRightText);
                 }
                 mc.profiler.endSection();
             }
         }
 
+        // Helper method to check if a section should be disabled
         private static boolean isDisabled(String line) {
+            // Check if the line contains any of the disabled sections
             return Arrays.stream(ModConfig.disabledSections)
                     .anyMatch(section -> line.toLowerCase().contains(section.toLowerCase()));
         }
 
         private static String applyFormatting(String line) {
-            // Iterate over the lineColors map to find a matching key
             for (Map.Entry<String, TextFormatting> entry : lineColors.entrySet()) {
-                String key = entry.getKey().toLowerCase();
-                if (line.toLowerCase().contains(key)) {
-                    // Apply the color formatting and reset at the end
+                if (line.toLowerCase().contains(entry.getKey().toLowerCase())) {
                     return entry.getValue() + line + TextFormatting.RESET;
                 }
             }
-            // Return the original line if no match is found
             return line;
         }
 
         private static void renderTextWithoutBackground(List<String> leftText, List<String> rightText) {
-            Minecraft mc = Minecraft.getMinecraft();
             mc.profiler.startSection("shawtyDebugScreen");
 
             ScaledResolution scaledResolution = new ScaledResolution(mc);
-            int screenWidth = scaledResolution.getScaledWidth(); // Correct scaled width
+            int screenWidth = scaledResolution.getScaledWidth();
             int leftMargin = 2;
             int rightMargin = 2;
 
-            // Filter out disabled sections
-            List<String> filteredLeftText = leftText.stream()
-                    .filter(line -> !isDisabled(line))
-                    .collect(Collectors.toList());
-            List<String> filteredRightText = rightText.stream()
-                    .filter(line -> !isDisabled(line))
-                    .collect(Collectors.toList());
-
-            // Render the left-aligned text
-            for (int i = 0; i < filteredLeftText.size(); i++) {
-                String text = filteredLeftText.get(i);
-                int yPosition = 2 + i * 10; // Adjust line spacing as needed
-                mc.fontRenderer.drawString(text, leftMargin, yPosition, 0xFFFFFF);
+            for (int i = 0; i < leftText.size(); i++) {
+                mc.fontRenderer.drawString(leftText.get(i), leftMargin, 2 + i * 10, 0xFFFFFF);
             }
 
-            // Render the right-aligned text
-            for (int i = 0; i < filteredRightText.size(); i++) {
-                String text = filteredRightText.get(i);
-                int textWidth = mc.fontRenderer.getStringWidth(text);
-                int xPosition = screenWidth - rightMargin - textWidth; // Use scaled width
-                int yPosition = 2 + i * 10; // Adjust line spacing as needed
-                mc.fontRenderer.drawString(text, xPosition, yPosition, 0xFFFFFF);
+            for (int i = 0; i < rightText.size(); i++) {
+                int textWidth = mc.fontRenderer.getStringWidth(rightText.get(i));
+                mc.fontRenderer.drawString(rightText.get(i), screenWidth - rightMargin - textWidth, 2 + i * 10, 0xFFFFFF);
             }
             mc.profiler.endSection();
         }
