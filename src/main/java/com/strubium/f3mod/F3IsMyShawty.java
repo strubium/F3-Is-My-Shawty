@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.relauncher.Side;
@@ -25,9 +25,8 @@ public class F3IsMyShawty {
     private static List<String> cachedRightText;
     private static int lastHash = 0;
 
-
     @Mod.EventHandler
-    public void onPreInit(FMLPreInitializationEvent event) {
+    public void onInit(FMLInitializationEvent event){
         ModConfig.reloadColors();
         mc = Minecraft.getMinecraft();
     }
@@ -88,12 +87,12 @@ public class F3IsMyShawty {
         private static boolean isDisabled(String line) {
             // Check if the line contains any of the disabled sections
             return Arrays.stream(ModConfig.disabledSections)
-                    .anyMatch(section -> line.toLowerCase().contains(section.toLowerCase()));
+                    .anyMatch(section -> line.toLowerCase(Locale.ROOT).contains(section.toLowerCase(Locale.ROOT)));
         }
 
         private static String applyFormatting(String line) {
             for (Map.Entry<String, TextFormatting> entry : lineColors.entrySet()) {
-                if (line.toLowerCase().contains(entry.getKey().toLowerCase())) {
+                if (line.toLowerCase(Locale.ROOT).contains(entry.getKey().toLowerCase(Locale.ROOT))) {
                     return entry.getValue() + line + TextFormatting.RESET;
                 }
             }
@@ -109,12 +108,12 @@ public class F3IsMyShawty {
             int rightMargin = 2;
 
             for (int i = 0; i < leftText.size(); i++) {
-                mc.fontRenderer.drawString(leftText.get(i), leftMargin, 2 + i * 10, 0xFFFFFF);
+                mc.fontRenderer.drawString(leftText.get(i), leftMargin, 2 + i * mc.fontRenderer.FONT_HEIGHT, 0xFFFFFF);
             }
 
             for (int i = 0; i < rightText.size(); i++) {
                 int textWidth = mc.fontRenderer.getStringWidth(rightText.get(i));
-                mc.fontRenderer.drawString(rightText.get(i), screenWidth - rightMargin - textWidth, 2 + i * 10, 0xFFFFFF);
+                mc.fontRenderer.drawString(rightText.get(i), screenWidth - rightMargin - textWidth, 2 + i * mc.fontRenderer.FONT_HEIGHT, 0xFFFFFF);
             }
             mc.profiler.endSection();
         }
