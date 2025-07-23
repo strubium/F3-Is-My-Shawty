@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.relauncher.Side;
@@ -13,10 +13,12 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.*;
-import java.util.Objects;
 
-@Mod(modid = "f3ismyshawty", name = "F3 Is My Shawty", version = "1.0.4", clientSideOnly = true)
+@Mod(modid = "f3ismyshawty", name = "F3 Is My Shawty", version = "1.0.5", clientSideOnly = true)
 public class F3IsMyShawty {
+
+    // Lowercase cache for faster comparison
+    public static String[] disabledSectionsLower = new String[]{};
 
     public static Minecraft mc;
 
@@ -26,7 +28,7 @@ public class F3IsMyShawty {
     private static int lastHash = 0;
 
     @Mod.EventHandler
-    public void onInit(FMLInitializationEvent event){
+    public void onPostInit(FMLPostInitializationEvent event){
         ModConfig.reloadColors();
         mc = Minecraft.getMinecraft();
     }
@@ -55,7 +57,12 @@ public class F3IsMyShawty {
                     mc.profiler.startSection("cacheComparison");
 
                     // Compute new hash for the text lists (only visible sections)
-                    int newHash = Objects.hash(leftText, rightText);
+                    int newHash = Arrays.hashCode(new int[] {
+                            leftText.hashCode(),
+                            rightText.hashCode(),
+                            leftText.size(),
+                            rightText.size()
+                    });
 
                     // Check if the hash has changed and update cache accordingly
                     if (newHash != lastHash) {
@@ -85,9 +92,11 @@ public class F3IsMyShawty {
 
         // Helper method to check if a section should be disabled
         private static boolean isDisabled(String line) {
-            // Check if the line contains any of the disabled sections
-            return Arrays.stream(ModConfig.disabledSections)
-                    .anyMatch(section -> line.toLowerCase(Locale.ROOT).contains(section.toLowerCase(Locale.ROOT)));
+            String lower = line.toLowerCase(Locale.ROOT);
+            for (String section : disabledSectionsLower) {
+                if (lower.contains(section)) return true;
+            }
+            return false;
         }
 
         private static String applyFormatting(String line) {

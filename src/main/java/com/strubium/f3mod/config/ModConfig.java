@@ -42,5 +42,11 @@ public class ModConfig {
                 }
             }
         }
+
+        // Lowercase disabled section values for fast checks
+        F3IsMyShawty.disabledSectionsLower = new String[disabledSections.length];
+        for (int i = 0; i < disabledSections.length; i++) {
+            F3IsMyShawty.disabledSectionsLower[i] = disabledSections[i].toLowerCase();
+        }
     }
 }
